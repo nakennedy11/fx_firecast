@@ -2,7 +2,8 @@ import messaging, { Message } from "./messaging";
 
 import { handleCastMessage } from "./components/cast";
 import Discovery from "./components/cast/discovery";
-import Remote from "./components/cast/remote";
+import Remote from "./components/generic/remote"
+import CastRemote from "./components/cast/remote";
 
 import { startMediaServer, stopMediaServer } from "./components/mediaServer";
 
@@ -53,7 +54,7 @@ messaging.on("message", (message: Message) => {
                     if (shouldWatchStatus) {
                         remotes.set(
                             device.id,
-                            new Remote(device.host, {
+                            new CastRemote(device.host, {
                                 // RECEIVER_STATUS
                                 onReceiverStatusUpdate(status) {
                                     messaging.sendMessage({
