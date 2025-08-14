@@ -8,7 +8,7 @@ import type {
     SenderMediaMessage
 } from "./types";
 
-import Remote from "../generic/remote";
+import {Remote} from "../generic/types";
 
 const NS_MEDIA = "urn:x-cast:com.google.cast.media";
 

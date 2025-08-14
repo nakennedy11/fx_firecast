@@ -1,8 +1,8 @@
 import messaging, { Message } from "./messaging";
 
 import { handleCastMessage } from "./components/cast";
-import Discovery from "./components/cast/discovery";
-import Remote from "./components/generic/remote"
+import CastDiscovery from "./components/cast/discovery";
+import {Remote} from "./components/generic/types"
 import CastRemote from "./components/cast/remote";
 
 import { startMediaServer, stopMediaServer } from "./components/mediaServer";
@@ -20,7 +20,8 @@ process.on("SIGTERM", async () => {
     }
 });
 
-let discovery: Discovery | null = null;
+// TODO: need this lower discovery thing to probably be more generic or 
+let discovery: CastDiscovery | null = null;
 const remotes = new Map<string, Remote>();
 
 /**
@@ -41,7 +42,7 @@ messaging.on("message", (message: Message) => {
         case "bridge:startDiscovery": {
             const { shouldWatchStatus } = message.data;
 
-            discovery = new Discovery({
+            discovery = new CastDiscovery({
                 onDeviceFound(device) {
                     messaging.sendMessage({
                         subject: "main:deviceUp",

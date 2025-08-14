@@ -32,7 +32,7 @@ interface DiscoveryOptions {
     onDeviceDown(deviceId: string): void;
 }
 
-export default class Discovery {
+export default class CastDiscovery {
     browser = mdns.createBrowser(mdns.tcp("googlecast"), {
         resolverSequence: [
             mdns.rst.DNSServiceResolve(),
