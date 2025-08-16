@@ -12,7 +12,8 @@ import { startMediaServer, stopMediaServer } from "./components/mediaServer";
 import { applicationVersion } from "../../config.json";
 
 process.on("SIGTERM", async () => {
-    discovery?.stop();
+    castDiscovery?.stop();
+    dialDiscovery?.stop();
     try {
         await stopMediaServer();
     } catch (err) {
@@ -23,7 +24,8 @@ process.on("SIGTERM", async () => {
 });
 
 // TODO: need this lower discovery thing to probably be more generic or 
-let discovery: Discovery | null = null;
+let castDiscovery: CastDiscovery | null = null;
+let dialDiscovery: DialDiscovery | null = null;
 const remotes = new Map<string, Remote>();
 
 /**
@@ -44,7 +46,7 @@ messaging.on("message", (message: Message) => {
         case "bridge:startDiscovery": {
             const { shouldWatchStatus } = message.data;
 
-            discovery = new CastDiscovery({
+            castDiscovery = new CastDiscovery({
                 onDeviceFound(device) {
                     messaging.sendMessage({
                         subject: "main:deviceUp",
@@ -101,7 +103,17 @@ messaging.on("message", (message: Message) => {
                 }
             });
 
-            discovery.start();
+
+            dialDiscovery = new DialDiscovery({
+                onDeviceFound(device) {
+                    // TODO -- create a new remote with info from device, only if we don't have that remote already
+                },
+                onDeviceDown(deviceId) {
+                    // TODO -- I don't think I need anything here 
+                }
+            });
+
+            castDiscovery.start();
 
             break;
         }

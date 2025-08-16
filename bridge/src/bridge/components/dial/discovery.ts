@@ -1,91 +1,129 @@
 import type { Discovery, DiscoveryOptions } from "../generic/types";
 
-import { Client, SsdpHeaders } from "node-ssdp";
+import type { ReceiverDevice } from "../../messagingTypes";
 
-import fetch from "node-fetch";
+import { Client, SsdpHeaders } from "node-ssdp";
 
 import { RemoteInfo } from "dgram";
 
-const dialFilter = 'urn:dial-multiscreen-org:service:dial:1';
+import fetch from "node-fetch";
+
+import xml2js from "xml2js";
+
+const dialSearchTarget = 'urn:dial-multiscreen-org:service:dial:1';
+
+
+interface DialDevice {
+  deviceType: string;
+  friendlyName: string;
+  manufacturer: string;
+  manufacturerURL: string;
+  modelDescription: string;
+  modelName: string;
+  modelNumber: string;
+  modelURL: string;
+  serialNumber: string;
+  UDN: string;
+  applicationURL: string; // should never be null based on DIAL protocol
+}
+
 
 export default class DialDiscovery implements Discovery {
-    constructor(opts: DiscoveryOptions) {
-        //todo - constructor to have it send new remotes to the list in index
+
+  // node-ssdp client 
+  client = new Client();
+
+
+  private parseSsdpHeaders(raw: SsdpHeaders): Record<string, string> {
+    const lines = raw.toString().split(/\r?\n/);
+    const map: Record<string, string> = {};
+
+    for (const line of lines) {
+      const idx = line.indexOf(":");
+      if (idx === -1) continue;
+      map[line.slice(0, idx).trim().toLowerCase()] = line.slice(idx + 1).trim();
     }
 
-    findServers(client: Client) {
-        // Perform a search
-        client.search(dialFilter);
-
-        setTimeout(() => {
-        client.stop();
-        console.log('Stopped SSDP search.');
-        }, 5000);
-
-    }
-
-
-    start() {
-        const client = new Client();
-
-        // Listen for responses
-        client.on('response', (headers: SsdpHeaders, statusCode: number, rinfo: RemoteInfo) => {
-        console.log('--- SSDP Response ---');
-        console.log('Status:', statusCode);
-        console.log('Headers:', headers);
-        console.log('Remote Info:', rinfo);
-        //console.log(typeof parseHeaders(headers))
-        //console.log();
-        //const parsed_headers = parseHeaders(headers)
-        //console.log('LOCATION AGIAN:', parsed_headers.LOCATION);
-        //console.log();
-        
-        client.search(dialFilter);
-        });
-
-        // TODO: need to 
-
-
-    }
-
-    stop() {
-        // todo
-    }
-}
-
-///////////////////////////////////////////////////////////////
-// STUFF FROM TEST IMPLEMENTATION IN REPO @DIAL_CLIENT BELOW //
-///////////////////////////////////////////////////////////////
-
-//const { Client } = require('node-ssdp');
-
-
-const client = new Client();
-
-
-
-function parseHeaders(headerString: string): Record<string, string> {
-  const headers: Record<string, string> = {};
-  const lines = headerString.split(/\r?\n/);
-  for (const line of lines) {
-    const [key, ...rest] = line.split(':');
-    if (key && rest.length) {
-      headers[key.trim()] = rest.join(':').trim();
-    }
+    return map;
   }
-  return headers;
+
+
+  private async getDialDeviceDesc(location: string): Promise<DialDevice> {
+    const response = await fetch(location);
+    const xmlText = await response.text();
+    const parsed = await xml2js.parseStringPromise(xmlText, { explicitArray: false });
+
+    const device = parsed.root.device
+
+    const dialDevice: DialDevice = {
+      deviceType: device.deviceType,
+      friendlyName: device.friendlyName,
+      manufacturer: device.manufacturer,
+      manufacturerURL: device.manufacturerURL,
+      modelDescription: device.modelDescription,
+      modelName: device.modelName,
+      modelNumber: device.modelNumber,
+      modelURL: device.modelURL,
+      serialNumber: device.serialNumber,
+      UDN: device.UDN,
+      applicationURL: response.headers.get("application-url")!
+    };
+
+    return dialDevice;
+  }
+
+  constructor(opts: DiscoveryOptions) {
+    //todo - constructor to have it send new remotes to the list in index
+
+    // Listen for responses
+    this.client.on('response', (headers: SsdpHeaders, statusCode: number, rinfo: RemoteInfo) => {
+      /*
+        SsdpHeaders:
+          LOCATION? (url where the service description can be found)
+          ST? (urn:dial-multiscreen-org:service:dial:1)
+          --
+          USN? (unique service name of responding device)
+        
+        RemoteInfo:
+          address: string
+          family: "IPv4" | "IPv6"
+          port: number
+          size: number
+      */
+
+      this.handleResponse(headers, rinfo, opts)
+
+    });
+  }
+
+  private async handleResponse(headers: SsdpHeaders, rinfo: RemoteInfo, opts: DiscoveryOptions) {
+    // parse the SSDP reponse header to a usable map
+    const parsedHeaders = this.parseSsdpHeaders(headers);
+    // get the device description from the given header location as a DialDevice
+    const dialDevice = await this.getDialDeviceDesc(parsedHeaders.location)
+
+
+
+    const device: ReceiverDevice = {
+      id: dialDevice.UDN,
+      friendlyName: dialDevice.friendlyName,
+      modelName: dialDevice.modelName,
+      capabilities: 0, //TODO: IDK IF THIS ACTUALLY MATTERS OR NOT
+      host: dialDevice.applicationURL,
+      port: rinfo.port
+    }
+
+    opts.onDeviceFound(device);
+  }
+
+  start() {
+    // do an ssdp search with the DIAL search target to find DIAL servers/first screen devices
+    this.client.search(dialSearchTarget);
+  }
+
+  stop() {
+    this.client.stop();
+  }
 }
 
 
-
-async function get_desc() {
-//'Origin: https://www.youtube.com'
-  const response = await fetch('http://10.0.0.163:8009/apps/YouTube', {method: "POST", body: 'v=qbu34plwERw', headers: {'Origin': 'https://www.youtube.com'}});//, {
-    //method: "POST"});
-  const data = await response;
-
-console.log(data);
-}
-
-
-get_desc();
