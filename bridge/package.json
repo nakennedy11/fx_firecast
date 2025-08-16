@@ -15,6 +15,7 @@
         "mdns": "^2.7.2",
         "mime-types": "^2.1.35",
         "node-fetch": "^3.2.10",
+        "node-ssdp": "^4.0.1",
         "tweetnacl": "^1.0.3",
         "ws": "^8.5.0",
         "yargs": "^17.5.1"
@@ -23,8 +24,9 @@
         "@types/mdns": "^0.0.34",
         "@types/mime-types": "^2.1.1",
         "@types/minimist": "^1.2.2",
-        "@types/node": "^17.0.26",
+        "@types/node": "^17.0.45",
         "@types/node-fetch": "^2.6.1",
+        "@types/node-ssdp": "^4.0.4",
         "@types/ws": "^8.5.3",
         "@types/yargs": "^17.0.11",
         "fs-extra": "^10.1.0",

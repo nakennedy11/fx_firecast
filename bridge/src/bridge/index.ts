@@ -1,9 +1,11 @@
 import messaging, { Message } from "./messaging";
 
 import { handleCastMessage } from "./components/cast";
+import type { Discovery, Remote } from "./components/generic/types"
 import CastDiscovery from "./components/cast/discovery";
-import {Remote} from "./components/generic/types"
 import CastRemote from "./components/cast/remote";
+import DialDiscovery from "./components/dial/discovery";
+import DialRemote from "./components/dial/remote";
 
 import { startMediaServer, stopMediaServer } from "./components/mediaServer";
 
@@ -21,7 +23,7 @@ process.on("SIGTERM", async () => {
 });
 
 // TODO: need this lower discovery thing to probably be more generic or 
-let discovery: CastDiscovery | null = null;
+let discovery: Discovery | null = null;
 const remotes = new Map<string, Remote>();
 
 /**
