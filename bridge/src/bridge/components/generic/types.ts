@@ -15,8 +15,6 @@ export interface Remote {
     sendReceiverMessage(message: DistributiveOmit<SenderMessage, "requestId">): void;
 }
 
-
-
 export interface DiscoveryOptions {
     onDeviceFound(device: ReceiverDevice): void;
     onDeviceDown(deviceId: string): void;

@@ -106,10 +106,31 @@ messaging.on("message", (message: Message) => {
 
             dialDiscovery = new DialDiscovery({
                 onDeviceFound(device) {
-                    // TODO -- create a new remote with info from device, only if we don't have that remote already
+                    messaging.sendMessage({
+                        subject: "main:deviceUp",
+                        data: {
+                            deviceId: device.id,
+                            deviceInfo: device
+                        }
+                    });
+                    if (shouldWatchStatus) {
+                        remotes.set(
+                            device.id,
+                            new DialRemote(device));
+                    }
                 },
                 onDeviceDown(deviceId) {
-                    // TODO -- I don't think I need anything here 
+                    messaging.sendMessage({
+                        subject: "main:deviceDown",
+                        data: { deviceId }
+                    });
+
+                    if (shouldWatchStatus) {
+                        if (remotes.has(deviceId)) {
+                            remotes.get(deviceId)?.disconnect();
+                            remotes.delete(deviceId);
+                        }
+                    }
                 }
             });
 

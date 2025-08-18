@@ -13,7 +13,7 @@ import xml2js from "xml2js";
 const dialSearchTarget = 'urn:dial-multiscreen-org:service:dial:1';
 
 
-interface DialDevice {
+export interface DialDevice {
   deviceType: string;
   friendlyName: string;
   manufacturer: string;
