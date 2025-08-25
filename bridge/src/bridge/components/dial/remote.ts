@@ -12,10 +12,6 @@ import AppProtocol from "./protocols/types";
 import YoutubeProtocol from "./protocols/youtube";
 
 
-const protocolMap: Record<string, AppProtocol> = {
-    'YouTube': new YoutubeProtocol()
-}
-
 export default class DialRemote implements Remote {
     private device: ReceiverDevice;
     private appId: string | null = null; // for selecting which protocol to use, set when launching an app
@@ -27,7 +23,10 @@ export default class DialRemote implements Remote {
     }
 
     selectProtocol(appId: string): void {
-        this.appProtocol = protocolMap[appId];
+        switch (appId) {
+            case "YouTube":
+                this.appProtocol = new YoutubeProtocol(this.device);
+        }
     }
 
     disconnect(): void {
@@ -52,7 +51,7 @@ export default class DialRemote implements Remote {
         }
         */
 
-        this.appProtocol?.handleMediaMessage(message)
+        this.appProtocol?.handleMediaMessage(message, this.device)
 
     }
 

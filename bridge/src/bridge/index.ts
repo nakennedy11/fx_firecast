@@ -106,17 +106,19 @@ messaging.on("message", (message: Message) => {
 
             dialDiscovery = new DialDiscovery({
                 onDeviceFound(device) {
-                    messaging.sendMessage({
-                        subject: "main:deviceUp",
-                        data: {
-                            deviceId: device.id,
-                            deviceInfo: device
+                    if (!remotes.has(device.id)) {
+                        messaging.sendMessage({
+                            subject: "main:deviceUp",
+                            data: {
+                                deviceId: device.id,
+                                deviceInfo: device
+                            }
+                        });
+                        if (shouldWatchStatus) {
+                            remotes.set(
+                                device.id,
+                                new DialRemote(device));
                         }
-                    });
-                    if (shouldWatchStatus) {
-                        remotes.set(
-                            device.id,
-                            new DialRemote(device));
                     }
                 },
                 onDeviceDown(deviceId) {
