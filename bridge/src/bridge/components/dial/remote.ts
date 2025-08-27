@@ -51,7 +51,7 @@ export default class DialRemote implements Remote {
         }
         */
 
-        this.appProtocol?.handleMediaMessage(message, this.device)
+        this.appProtocol?.handleMediaMessage(message)
 
     }
 
@@ -90,6 +90,7 @@ export default class DialRemote implements Remote {
                 console.log("SET VOL");
                 // This doesn't work with DIAL stuff
                 // TODO -- LEAVE BLANK? -- MAYBE CAN BE DONE WITH THE YOUTUBE LOUNGE API
+                // probably do a handleMediaMessage with a volume ting
                 break;
         }
     }
