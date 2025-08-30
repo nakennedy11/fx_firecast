@@ -8,6 +8,8 @@ import type {
     SenderMediaMessage
 } from "./types";
 
+import type { Remote } from "../generic/types";
+
 const NS_MEDIA = "urn:x-cast:com.google.cast.media";
 
 interface CastRemoteOptions {
@@ -20,7 +22,7 @@ interface CastRemoteOptions {
 /**
  * castv2 client for receiver tracking.
  */
-export default class Remote extends CastClient {
+export default class CastRemote extends CastClient implements Remote {
     private transportClient?: RemoteTransport;
 
     constructor(private host: string, private options?: CastRemoteOptions) {

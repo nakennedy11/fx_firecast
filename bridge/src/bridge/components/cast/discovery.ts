@@ -2,6 +2,8 @@ import mdns from "mdns";
 
 import type { ReceiverDevice } from "../../messagingTypes";
 
+import type { Discovery, DiscoveryOptions } from "../generic/types";
+
 /**
  * Chromecast TXT record
  */
@@ -27,12 +29,7 @@ interface CastRecord {
     rs: string;
 }
 
-interface DiscoveryOptions {
-    onDeviceFound(device: ReceiverDevice): void;
-    onDeviceDown(deviceId: string): void;
-}
-
-export default class Discovery {
+export default class CastDiscovery implements Discovery {
     browser = mdns.createBrowser(mdns.tcp("googlecast"), {
         resolverSequence: [
             mdns.rst.DNSServiceResolve(),

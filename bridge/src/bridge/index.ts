@@ -1,15 +1,19 @@
 import messaging, { Message } from "./messaging";
 
 import { handleCastMessage } from "./components/cast";
-import Discovery from "./components/cast/discovery";
-import Remote from "./components/cast/remote";
+import type { Discovery, Remote } from "./components/generic/types"
+import CastDiscovery from "./components/cast/discovery";
+import CastRemote from "./components/cast/remote";
+import DialDiscovery from "./components/dial/discovery";
+import DialRemote from "./components/dial/remote";
 
 import { startMediaServer, stopMediaServer } from "./components/mediaServer";
 
 import { applicationVersion } from "../../config.json";
 
 process.on("SIGTERM", async () => {
-    discovery?.stop();
+    castDiscovery?.stop();
+    dialDiscovery?.stop();
     try {
         await stopMediaServer();
     } catch (err) {
@@ -19,7 +23,9 @@ process.on("SIGTERM", async () => {
     }
 });
 
-let discovery: Discovery | null = null;
+// TODO: need this lower discovery thing to probably be more generic or 
+let castDiscovery: CastDiscovery | null = null;
+let dialDiscovery: DialDiscovery | null = null;
 const remotes = new Map<string, Remote>();
 
 /**
@@ -40,7 +46,7 @@ messaging.on("message", (message: Message) => {
         case "bridge:startDiscovery": {
             const { shouldWatchStatus } = message.data;
 
-            discovery = new Discovery({
+            castDiscovery = new CastDiscovery({
                 onDeviceFound(device) {
                     messaging.sendMessage({
                         subject: "main:deviceUp",
@@ -53,7 +59,7 @@ messaging.on("message", (message: Message) => {
                     if (shouldWatchStatus) {
                         remotes.set(
                             device.id,
-                            new Remote(device.host, {
+                            new CastRemote(device.host, {
                                 // RECEIVER_STATUS
                                 onReceiverStatusUpdate(status) {
                                     messaging.sendMessage({
@@ -97,7 +103,40 @@ messaging.on("message", (message: Message) => {
                 }
             });
 
-            discovery.start();
+
+            dialDiscovery = new DialDiscovery({
+                onDeviceFound(device) {
+                    if (!remotes.has(device.id)) {
+                        messaging.sendMessage({
+                            subject: "main:deviceUp",
+                            data: {
+                                deviceId: device.id,
+                                deviceInfo: device
+                            }
+                        });
+                        if (shouldWatchStatus) {
+                            remotes.set(
+                                device.id,
+                                new DialRemote(device));
+                        }
+                    }
+                },
+                onDeviceDown(deviceId) {
+                    messaging.sendMessage({
+                        subject: "main:deviceDown",
+                        data: { deviceId }
+                    });
+
+                    if (shouldWatchStatus) {
+                        if (remotes.has(deviceId)) {
+                            remotes.get(deviceId)?.disconnect();
+                            remotes.delete(deviceId);
+                        }
+                    }
+                }
+            });
+
+            castDiscovery.start();
 
             break;
         }

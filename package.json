@@ -19,6 +19,8 @@
         "lint:extension": "eslint extension/src --ext .ts,.js,.svelte"
     },
     "devDependencies": {
+        "@types/node-ssdp": "^4.0.4",
+        "@types/xml2js": "^0.4.14",
         "@typescript-eslint/eslint-plugin": "^5.14.0",
         "@typescript-eslint/parser": "^5.14.0",
         "eslint": "^8.16.0",
@@ -29,5 +31,10 @@
         "prettier-plugin-svelte": "^2.7.0",
         "selenium-webdriver": "^4.1.1",
         "ws": "^8.5.0"
+    },
+    "dependencies": {
+        "node-fetch": "^2.7.0",
+        "node-ssdp": "^4.0.1",
+        "xml2js": "^0.6.2"
     }
 }
